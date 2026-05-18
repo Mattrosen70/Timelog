@@ -5,21 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TimeLog">
-<title>TimeLog</title>
+<meta name="apple-mobile-web-app-title" content="Time Tracker Assistant">
+<title>Time Tracker Assistant</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --surface2: #1c1c26;
-    --border: #2a2a38;
+    --bg: #f5f5f5;
+    --surface: #ffffff;
+    --surface2: #f9f9f9;
+    --border: #e0e0e0;
     --accent: #7c6dfa;
     --accent2: #fa6d8a;
     --accent3: #6dfad4;
-    --text: #f0f0f8;
-    --text2: #8888a8;
-    --text3: #555570;
+    --text: #1a1a1a;
+    --text2: #666666;
+    --text3: #999999;
     --success: #6dfad4;
     --danger: #fa6d8a;
     --radius: 16px;
@@ -48,6 +48,7 @@
     border-top: 1px solid var(--border);
     padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
     z-index: 100;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
   }
   .nav-btn {
     flex: 1;
@@ -101,13 +102,14 @@
     text-align: center;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   }
   .timer-hero::before {
     content: '';
     position: absolute;
     top: -60px; left: -60px;
     width: 200px; height: 200px;
-    background: radial-gradient(circle, rgba(124,109,250,0.15) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(124,109,250,0.08) 0%, transparent 70%);
     pointer-events: none;
   }
   .timer-hero::after {
@@ -115,7 +117,7 @@
     position: absolute;
     bottom: -40px; right: -40px;
     width: 160px; height: 160px;
-    background: radial-gradient(circle, rgba(250,109,138,0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(250,109,138,0.06) 0%, transparent 70%);
     pointer-events: none;
   }
 
@@ -241,6 +243,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
   .stat-value {
     font-family: 'DM Mono', monospace;
@@ -266,6 +269,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
   .entry-dot {
     width: 10px; height: 10px;
@@ -326,13 +330,14 @@
 
   .report-total {
     margin: 0 24px 20px;
-    background: linear-gradient(135deg, rgba(124,109,250,0.15), rgba(250,109,138,0.1));
-    border: 1px solid rgba(124,109,250,0.3);
+    background: linear-gradient(135deg, rgba(124,109,250,0.08), rgba(250,109,138,0.06));
+    border: 1px solid rgba(124,109,250,0.2);
     border-radius: var(--radius);
     padding: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   }
   .report-total-label { font-size: 13px; color: var(--text2); font-weight: 600; }
   .report-total-value {
@@ -347,7 +352,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.3);
     z-index: 200;
     backdrop-filter: blur(4px);
   }
@@ -359,6 +364,7 @@
     width: 100%;
     border-top: 1px solid var(--border);
     animation: slideUp 0.3s ease;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
   }
   @keyframes slideUp {
     from { transform: translateY(100%); }
@@ -433,7 +439,7 @@
     padding: 14px;
     border-radius: var(--radius-sm);
     border: none;
-    background: rgba(250,109,138,0.15);
+    background: rgba(250,109,138,0.1);
     color: var(--danger);
     font-family: 'Syne', sans-serif;
     font-size: 14px;
@@ -489,7 +495,7 @@
 <div class="page active" id="page-timer">
   <div class="header">
     <div class="header-label">Time Tracker</div>
-    <div class="header-title">Track Work</div>
+    <div class="header-title">Time Tracker Assistant</div>
   </div>
 
   <div class="timer-hero">
@@ -531,7 +537,7 @@
 <!-- REPORT PAGE -->
 <div class="page" id="page-report">
   <div class="header">
-    <div class="header-label">TimeLog</div>
+    <div class="header-label">Time Tracker</div>
     <div class="header-title">Report</div>
   </div>
 
