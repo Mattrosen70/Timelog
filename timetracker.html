@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TimeLog">
+<title>TimeLog</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c26;
+    --border: #2a2a38;
+    --accent: #7c6dfa;
+    --accent2: #fa6d8a;
+    --accent3: #6dfad4;
+    --text: #f0f0f8;
+    --text2: #8888a8;
+    --text3: #555570;
+    --success: #6dfad4;
+    --danger: #fa6d8a;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* NAV */
+  .nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 22px; height: 22px; }
+
+  /* PAGES */
+  .page { display: none; padding: 0 0 100px; min-height: 100vh; }
+  .page.active { display: block; }
+
+  /* HEADER */
+  .header {
+    padding: 60px 24px 24px;
+  }
+  .header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .header-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  /* TIMER PAGE */
+  .timer-hero {
+    margin: 0 24px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .timer-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(124,109,250,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .timer-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(250,109,138,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .timer-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text3);
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text3);
+    transition: background 0.3s;
+  }
+  .status-dot.running {
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .timer-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 56px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 8px;
+    transition: color 0.3s;
+  }
+  .timer-display.running { color: var(--accent); }
+
+  .timer-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 32px;
+  }
+
+  .task-input-wrap {
+    margin-bottom: 28px;
+    text-align: left;
+  }
+  .task-input-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .task-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .task-input:focus { border-color: var(--accent); }
+  .task-input::placeholder { color: var(--text3); }
+
+  .timer-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .timer-btn.start {
+    background: linear-gradient(135deg, var(--accent), #9d8ffc);
+    color: white;
+  }
+  .timer-btn.stop {
+    background: linear-gradient(135deg, var(--danger), #fc8fa3);
+    color: white;
+  }
+  .timer-btn:active { transform: scale(0.97); }
+
+  /* TODAY SUMMARY */
+  .section {
+    padding: 0 24px;
+    margin-bottom: 24px;
+  }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .today-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  /* RECENT ENTRIES */
+  .entry-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .entry-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .entry-info { flex: 1; min-width: 0; }
+  .entry-task {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+  .entry-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+  .entry-duration {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* REPORT PAGE */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    padding: 0 24px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .report-total {
+    margin: 0 24px 20px;
+    background: linear-gradient(135deg, rgba(124,109,250,0.15), rgba(250,109,138,0.1));
+    border: 1px solid rgba(124,109,250,0.3);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .report-total-label { font-size: 13px; color: var(--text2); font-weight: 600; }
+  .report-total-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 24px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ENTRY DETAIL MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; align-items: flex-end; }
+  .modal {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px calc(40px + env(safe-area-inset-bottom));
+    width: 100%;
+    border-top: 1px solid var(--border);
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 24px;
+  }
+  .modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 20px;
+  }
+  .modal-field { margin-bottom: 16px; }
+  .modal-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .modal-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    color: var(--text2);
+  }
+  .modal-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    outline: none;
+    resize: none;
+    transition: border-color 0.2s;
+  }
+  .modal-input:focus { border-color: var(--accent); }
+  .modal-input::placeholder { color: var(--text3); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-secondary {
+    flex: 1;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-primary {
+    flex: 2;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-danger {
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: rgba(250,109,138,0.15);
+    color: var(--danger);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; line-height: 1.6; }
+
+  /* Day group header */
+  .day-group { margin-bottom: 6px; }
+  .day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 10px 4px 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .day-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+    letter-spacing: 0.02em;
+  }
+  .day-total {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent3);
+  }
+
+  /* Report entry with notes badge */
+  .has-notes {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent3);
+    display: inline-block;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<!-- TIMER PAGE -->
+<div class="page active" id="page-timer">
+  <div class="header">
+    <div class="header-label">Time Tracker</div>
+    <div class="header-title">Track Work</div>
+  </div>
+
+  <div class="timer-hero">
+    <div class="timer-status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Ready</span>
+    </div>
+    <div class="timer-display" id="timer-display">00:00:00</div>
+    <div class="timer-date" id="timer-date"></div>
+
+    <div class="task-input-wrap">
+      <div class="task-input-label">Task Name</div>
+      <input class="task-input" id="task-input" type="text" placeholder="What are you working on?" maxlength="80">
+    </div>
+
+    <button class="timer-btn start" id="timer-btn" onclick="toggleTimer()">Start Timer</button>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Today</div>
+    <div class="today-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="today-hours">0h 0m</div>
+        <div class="stat-label">Time Logged</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="today-entries">0</div>
+        <div class="stat-label">Sessions</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Recent Sessions</div>
+    <div id="recent-list"></div>
+  </div>
+</div>
+
+<!-- REPORT PAGE -->
+<div class="page" id="page-report">
+  <div class="header">
+    <div class="header-label">TimeLog</div>
+    <div class="header-title">Report</div>
+  </div>
+
+  <div class="filter-row" id="filter-row">
+    <button class="filter-pill active" onclick="setFilter('all', this)">All Time</button>
+    <button class="filter-pill" onclick="setFilter('today', this)">Today</button>
+    <button class="filter-pill" onclick="setFilter('week', this)">This Week</button>
+    <button class="filter-pill" onclick="setFilter('month', this)">This Month</button>
+  </div>
+
+  <div class="report-total">
+    <div>
+      <div class="report-total-label">Total Time</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="report-count"></div>
+    </div>
+    <div class="report-total-value" id="report-total">0h 0m</div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Sessions</div>
+    <div id="report-list"></div>
+  </div>
+</div>
+
+<!-- ENTRY DETAIL MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Session Details</div>
+
+    <div class="modal-field">
+      <div class="modal-label">Task</div>
+      <div class="modal-value" id="modal-task">—</div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Duration</div>
+      <div class="modal-value" id="modal-duration">—</div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Time</div>
+      <div class="modal-value" id="modal-time">—</div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Notes</div>
+      <textarea class="modal-input" id="modal-notes" rows="3" placeholder="Add notes about this session..."></textarea>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Edit Task Name</div>
+      <input class="modal-input" id="modal-task-edit" type="text" placeholder="Task name">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-danger" onclick="deleteEntry()">Delete</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button class="nav-btn active" id="nav-timer" onclick="showPage('timer')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </svg>
+    Timer
+  </button>
+  <button class="nav-btn" id="nav-report" onclick="showPage('report')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>
+    Report
+  </button>
+</nav>
+
+<script>
+  // ── STATE ──────────────────────────────────────────────
+  let entries = JSON.parse(localStorage.getItem('tl_entries') || '[]');
+  let running = false;
+  let startTime = null;
+  let timerInterval = null;
+  let currentFilter = 'all';
+  let editingId = null;
+
+  // ── HELPERS ────────────────────────────────────────────
+  function save() { localStorage.setItem('tl_entries', JSON.stringify(entries)); }
+
+  function fmtDuration(ms) {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${sec}s`;
+    return `${sec}s`;
+  }
+
+  function fmtHHMMSS(ms) {
+    const s = Math.floor(ms / 1000);
+    const h = String(Math.floor(s / 3600)).padStart(2, '0');
+    const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const sec = String(s % 60).padStart(2, '0');
+    return `${h}:${m}:${sec}`;
+  }
+
+  function fmtTime(ts) {
+    const d = new Date(ts);
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  function todayStart() {
+    const d = new Date(); d.setHours(0,0,0,0); return d.getTime();
+  }
+  function weekStart() {
+    const d = new Date(); d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - d.getDay()); return d.getTime();
+  }
+  function monthStart() {
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(1); return d.getTime();
+  }
+
+  function filteredEntries() {
+    const now = Date.now();
+    return entries.filter(e => {
+      if (currentFilter === 'today') return e.start >= todayStart();
+      if (currentFilter === 'week') return e.start >= weekStart();
+      if (currentFilter === 'month') return e.start >= monthStart();
+      return true;
+    }).sort((a, b) => b.start - a.start);
+  }
+
+  // ── TIMER ──────────────────────────────────────────────
+  function toggleTimer() {
+    if (!running) {
+      startTime = Date.now();
+      running = true;
+      document.getElementById('status-dot').classList.add('running');
+      document.getElementById('status-text').textContent = 'Running';
+      document.getElementById('timer-display').classList.add('running');
+      document.getElementById('timer-btn').className = 'timer-btn stop';
+      document.getElementById('timer-btn').textContent = 'Stop Timer';
+      document.getElementById('task-input').disabled = true;
+      timerInterval = setInterval(updateTimerDisplay, 1000);
+    } else {
+      stopTimer();
+    }
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+    running = false;
+    const elapsed = Date.now() - startTime;
+    const task = document.getElementById('task-input').value.trim() || 'Untitled Task';
+
+    const entry = { id: Date.now().toString(), task, start: startTime, end: Date.now(), duration: elapsed, notes: '' };
+    entries.push(entry);
+    save();
+
+    document.getElementById('status-dot').classList.remove('running');
+    document.getElementById('status-text').textContent = 'Ready';
+    document.getElementById('timer-display').classList.remove('running');
+    document.getElementById('timer-display').textContent = '00:00:00';
+    document.getElementById('timer-btn').className = 'timer-btn start';
+    document.getElementById('timer-btn').textContent = 'Start Timer';
+    document.getElementById('task-input').value = '';
+    document.getElementById('task-input').disabled = false;
+
+    renderTimerPage();
+    openModal(entry.id);
+  }
+
+  function updateTimerDisplay() {
+    const el = document.getElementById('timer-display');
+    el.textContent = fmtHHMMSS(Date.now() - startTime);
+  }
+
+  // ── TIMER PAGE ─────────────────────────────────────────
+  function renderTimerPage() {
+    const now = Date.now();
+    const today = entries.filter(e => e.start >= todayStart());
+    const totalMs = today.reduce((s, e) => s + e.duration, 0);
+    const h = Math.floor(totalMs / 3600000);
+    const m = Math.floor((totalMs % 3600000) / 60000);
+    document.getElementById('today-hours').textContent = `${h}h ${m}m`;
+    document.getElementById('today-entries').textContent = today.length;
+
+    const recent = [...entries].sort((a, b) => b.start - a.start).slice(0, 5);
+    const list = document.getElementById('recent-list');
+    if (recent.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">⏱</div><div class="empty-text">No sessions yet.<br>Start your first timer above.</div></div>`;
+      return;
+    }
+    list.innerHTML = recent.map(e => `
+      <div class="entry-card" onclick="openModal('${e.id}')">
+        <div class="entry-dot"></div>
+        <div class="entry-info">
+          <div class="entry-task">${e.task}${e.notes ? '<span class="has-notes"></span>' : ''}</div>
+          <div class="entry-meta">${fmtTime(e.start)}</div>
+        </div>
+        <div class="entry-duration">${fmtDuration(e.duration)}</div>
+      </div>`).join('');
+  }
+
+  // ── REPORT PAGE ────────────────────────────────────────
+  function dayKey(ts) {
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  }
+
+  function fmtDayLabel(ts) {
+    const d = new Date(ts);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    if (d >= today) return 'Today';
+    if (d >= yesterday) return 'Yesterday';
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  }
+
+  function renderReportPage() {
+    const filtered = filteredEntries();
+    const totalMs = filtered.reduce((s, e) => s + e.duration, 0);
+    const h = Math.floor(totalMs / 3600000);
+    const m = Math.floor((totalMs % 3600000) / 60000);
+    document.getElementById('report-total').textContent = `${h}h ${m}m`;
+    document.getElementById('report-count').textContent = `${filtered.length} session${filtered.length !== 1 ? 's' : ''}`;
+
+    const list = document.getElementById('report-list');
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No sessions in this range.</div></div>`;
+      return;
+    }
+
+    // Group by day
+    const groups = {};
+    const groupOrder = [];
+    filtered.forEach(e => {
+      const k = dayKey(e.start);
+      if (!groups[k]) { groups[k] = { ts: e.start, entries: [] }; groupOrder.push(k); }
+      groups[k].entries.push(e);
+    });
+
+    list.innerHTML = groupOrder.map(k => {
+      const g = groups[k];
+      const dayMs = g.entries.reduce((s, e) => s + e.duration, 0);
+      const dh = Math.floor(dayMs / 3600000);
+      const dm = Math.floor((dayMs % 3600000) / 60000);
+      const rows = g.entries.map(e => `
+        <div class="entry-card" onclick="openModal('${e.id}')">
+          <div class="entry-dot" style="background:${e.notes ? 'var(--accent3)' : 'var(--accent)'}"></div>
+          <div class="entry-info">
+            <div class="entry-task">${e.task}${e.notes ? '<span class="has-notes"></span>' : ''}</div>
+            <div class="entry-meta">${new Date(e.start).toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'})} – ${new Date(e.end).toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'})}</div>
+          </div>
+          <div class="entry-duration">${fmtDuration(e.duration)}</div>
+        </div>`).join('');
+      return `
+        <div class="day-group">
+          <div class="day-header">
+            <div class="day-label">${fmtDayLabel(g.ts)}</div>
+            <div class="day-total">${dh}h ${dm}m</div>
+          </div>
+          ${rows}
+        </div>`;
+    }).join('');
+  }
+
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    renderReportPage();
+  }
+
+  // ── MODAL ──────────────────────────────────────────────
+  function openModal(id) {
+    editingId = id;
+    const e = entries.find(e => e.id === id);
+    if (!e) return;
+    document.getElementById('modal-task').textContent = e.task;
+    document.getElementById('modal-duration').textContent = fmtDuration(e.duration);
+    document.getElementById('modal-time').textContent = `${fmtTime(e.start)} – ${fmtTime(e.end)}`;
+    document.getElementById('modal-notes').value = e.notes || '';
+    document.getElementById('modal-task-edit').value = e.task;
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    editingId = null;
+  }
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modal')) closeModal();
+  }
+
+  function saveEntry() {
+    if (!editingId) return;
+    const idx = entries.findIndex(e => e.id === editingId);
+    if (idx === -1) return;
+    entries[idx].notes = document.getElementById('modal-notes').value.trim();
+    const newTask = document.getElementById('modal-task-edit').value.trim();
+    if (newTask) entries[idx].task = newTask;
+    save();
+    closeModal();
+    renderTimerPage();
+    renderReportPage();
+  }
+
+  function deleteEntry() {
+    if (!editingId) return;
+    if (!confirm('Delete this session?')) return;
+    entries = entries.filter(e => e.id !== editingId);
+    save();
+    closeModal();
+    renderTimerPage();
+    renderReportPage();
+  }
+
+  // ── NAVIGATION ─────────────────────────────────────────
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`page-${name}`).classList.add('active');
+    document.getElementById(`nav-${name}`).classList.add('active');
+    if (name === 'report') renderReportPage();
+  }
+
+  // ── INIT ───────────────────────────────────────────────
+  function updateDate() {
+    const d = new Date();
+    document.getElementById('timer-date').textContent = d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  }
+
+  updateDate();
+  setInterval(updateDate, 60000);
+  renderTimerPage();
+</script>
+</body>
+</html>
